@@ -17,4 +17,4 @@ A simple [GAXT](https://esolangs.org/wiki/GAXT) interpreter written in ocaml. Su
 
 ### Implementations notes
 - Starts from CalcStack
-- Current implementation puts $\rho$ on variable stack unchanged (it will be changed in future; however this is according to spec)
+- Current implementation puts $\rho$ on variable stack unchanged (it will be changed in future; however this is fine to spec)
