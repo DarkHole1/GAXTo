@@ -130,7 +130,7 @@ let run_logical state chr =
   let from_bool x = if x then 1L else 0L in
   let op =
     match chr with
-    | '`' -> fun a b -> not (to_bool a && to_bool b)
+    | '`' -> fun a b -> not (to_bool a || to_bool b)
     | '<' -> ( < )
     | '=' -> ( = )
     | '>' -> ( > )
@@ -262,4 +262,10 @@ let%test_module _ =
     let r' = List.flatten r |> List.rev
     let i = run' s'
     let%test "Concat operator" = i.calc_stack = r'
+
+    (* 10 > 20 => 0; 10 < 20 => 1; 10 = 20 => 0 *)
+    let i = run' "AB>AB<AB="
+    let%test "Test logical" = i.calc_stack = [ 0L; 1L; 0L ]
+    let i = run' "00`01`10`11`"
+    let%test "Test nor" = i.calc_stack = [ 0L; 0L; 0L; 1L ]
   end)
