@@ -18,3 +18,4 @@ A simple [GAXT](https://esolangs.org/wiki/GAXT) interpreter written in ocaml. Su
 ### Implementations notes
 - Starts from CalcStack
 - Current implementation puts $\rho$ on variable stack unchanged (it will be changed in future; however this is fine to spec)
+- Nor operator converts ints to bools, instead of being bitwise. E.g. ```1 2 ` -> true true ` -> false -> 0```. Not sure, that's desired behavior. 
