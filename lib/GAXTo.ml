@@ -169,7 +169,7 @@ let set_variable state x =
           state with
           variables =
             List.mapi
-              (fun i x' -> if Int64.of_int i == y' then x else x')
+              (fun i x' -> if Int64.of_int i = y' then x else x')
               state.variables;
         }
   | _ -> invalid_arg "Empty variable stack"
@@ -179,8 +179,12 @@ let run_stack state chr =
   | ':' -> (
       let alpha, state' = pop_current state in
       match state.current with
-      | CalcStack -> set_variable state alpha
-      | VarStack -> { state' with calc_stack = alpha :: state'.calc_stack })
+      | CalcStack -> set_variable state' alpha
+      | VarStack ->
+          {
+            state' with
+            calc_stack = get_variable state' alpha :: state'.calc_stack;
+          })
   | ';' -> (
       match state.current with
       | CalcStack -> { state with calc_stack = List.rev state.calc_stack }
@@ -198,6 +202,7 @@ let run_char state chr _rest =
   match chr with
   | '[' -> State state
   | ']' -> State state
+  | '!' -> raise Exit
   | _ ->
       let just =
         match chr with
@@ -209,7 +214,6 @@ let run_char state chr _rest =
         | '?' | '$' -> run_print state chr
         | ':' | ';' | '~' | '%' -> run_stack state chr
         | '#' -> switch_stack state
-        | '!' -> raise Exit
         | _ -> state
       in
       State just
@@ -268,4 +272,18 @@ let%test_module _ =
     let%test "Test logical" = i.calc_stack = [ 0L; 1L; 0L ]
     let i = run' "00`01`10`11`"
     let%test "Test nor" = i.calc_stack = [ 0L; 0L; 0L; 1L ]
+
+    (* a = 10 *)
+    let i = run' "Aa:"
+
+    let%test "Test assign to varibale" =
+      i.var_stack = [ Char.code 'a' |> Int64.of_int ]
+      && i.calc_stack = []
+      && i.variables = 10L :: List.init 25 (Fun.const 0L)
+
+    let i = run' "Aa:#:"
+
+    let%test "Test variable to stack" =
+      i.var_stack = [] && i.calc_stack = [ 10L ]
+      && i.variables = 10L :: List.init 25 (Fun.const 0L)
   end)
