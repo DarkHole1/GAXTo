@@ -1,4 +1,5 @@
 type currentStack = CalcStack | VarStack [@@deriving show]
+type action = Reading | WaitingElse | WaitingEndif [@@deriving show]
 
 (* let ( +: ) = Int64.add *)
 (* let ( -: ) = Int64.sub *)
@@ -10,6 +11,7 @@ type t = {
   var_stack : int64 list;
   current : currentStack;
   variables : int64 list;
+  action : action;
 }
 [@@deriving show]
 
@@ -21,6 +23,7 @@ let create (_ : unit) =
     var_stack = [];
     current = CalcStack;
     variables = Fun.const 0L |> List.init 26;
+    action = Reading;
   }
 
 let push_to_calc state x = { state with calc_stack = x :: state.calc_stack }
@@ -198,6 +201,14 @@ let run_stack state chr =
       | VarStack -> { state with var_stack = [] })
   | _ -> invalid_arg "Unknown stack operation"
 
+let run_if state chr =
+  match chr with
+  | '{' ->
+      let alpha, state' = pop_current state in
+      if alpha = 0L then state' else { state' with action = WaitingElse }
+  | '|' -> { state with action = WaitingEndif }
+  | _ -> invalid_arg "Unknown if operation"
+
 let run_char state chr _rest =
   match chr with
   | '[' -> State state
@@ -213,6 +224,7 @@ let run_char state chr _rest =
         | '`' | '<' | '=' | '>' -> run_logical state chr
         | '?' | '$' -> run_print state chr
         | ':' | ';' | '~' | '%' -> run_stack state chr
+        | '{' | '|' |'}' -> run_if state chr
         | '#' -> switch_stack state
         | _ -> state
       in
