@@ -286,4 +286,17 @@ let%test_module _ =
     let%test "Test variable to stack" =
       i.var_stack = [] && i.calc_stack = [ 10L ]
       && i.variables = 10L :: List.init 25 (Fun.const 0L)
+
+    let i = run' "ABCabc;#;"
+
+    let%test "Test stack reverse" =
+      i.calc_stack = [ 10L; 20L; 30L ] && i.var_stack = [ 97L; 98L; 99L ]
+
+    let i = run' "ABCabc~#~"
+
+    let%test "Test shave" =
+      i.calc_stack = [ 20L; 10L ] && i.var_stack = [ 98L; 97L ]
+
+    let i = run' "ABCabc%#%"
+    let%test "Test clear" = i.calc_stack = [] && i.var_stack = []
   end)
